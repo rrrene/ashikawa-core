@@ -3,12 +3,12 @@ require 'unit/spec_helper'
 require 'ashikawa-core/configuration'
 
 describe Ashikawa::Core::Configuration do
-  let(:url) { double }
-  let(:logger) { double }
-  let(:adapter) { double }
-  let(:connection) { double }
-  let(:username) { double }
-  let(:password) { double }
+  let(:url) { 'http://localhost:8530' }
+  let(:logger) { instance_double('Logger') }
+  let(:adapter) { double('Adapter') }
+  let(:connection) { instance_double('Ashikawa::Core::Connection') }
+  let(:username) { 'jeff' }
+  let(:password) { 'bowling!' }
 
   its(:url) { should be_nil }
   its(:logger) { should be_nil }
