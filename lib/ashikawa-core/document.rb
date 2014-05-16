@@ -128,8 +128,8 @@ module Ashikawa
       # @api public
       # @example Refresh the document
       #   document = Ashikawa::Core::Document.new(database, raw_document)
-      #   document.refresh!
-      def refresh!
+      #   document.refresh
+      def refresh
         parse_raw_document(send_request_for_document)
       end
 

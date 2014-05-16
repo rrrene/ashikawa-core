@@ -91,7 +91,7 @@ describe Ashikawa::Core::Document do
         .with(path, {})
         .and_return({ 'name' => 'Jeff' })
 
-      refreshed_subject = subject.refresh!
+      refreshed_subject = subject.refresh
       expect(refreshed_subject).to eq(subject)
       expect(subject['name']).to eq('Jeff')
     end

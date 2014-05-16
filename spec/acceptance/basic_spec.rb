@@ -197,7 +197,7 @@ describe 'Basics' do
       changed_document.save
 
       expect(subject['name']).to eq('The Dude')
-      subject.refresh!
+      subject.refresh
       expect(subject['name']).to eq('New Name')
     end
   end
