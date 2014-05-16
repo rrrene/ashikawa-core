@@ -1,10 +1,11 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/cursor'
+require 'ashikawa-core/database'
 
 describe Ashikawa::Core::Cursor do
   subject { Ashikawa::Core::Cursor }
-  let(:database) { double }
+  let(:database) { instance_double('Ashikawa::Core::Database') }
 
   describe 'cursor for a non-complete batch' do
     let(:response) { server_response('cursor/26011191') }
@@ -83,7 +84,7 @@ describe Ashikawa::Core::Cursor do
 
     it 'should be enumerable' do
       first = true
-      result = double
+      document = instance_double('Ashikawa::Core::Document')
 
       expect(database).to receive(:send_request)
         .twice
@@ -98,9 +99,9 @@ describe Ashikawa::Core::Cursor do
 
       expect(Ashikawa::Core::Document).to receive(:new)
         .exactly(5).times
-        .and_return(result)
+        .and_return(document)
 
-      expect(subject.map { |i| i }[0]).to eq(result)
+      expect(subject.map { |i| i }[0]).to eq(document)
     end
 
     it 'should return edge objects when recieving data from an edge collection' do
