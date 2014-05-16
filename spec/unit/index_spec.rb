@@ -1,17 +1,18 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/index'
+require 'ashikawa-core/collection'
 
 describe Ashikawa::Core::Index do
-  let(:collection) { double }
+  let(:collection) { instance_double('Ashikawa::Core::Collection') }
   let(:id) { '167137465/168054969' }
   let(:path) { 'index/167137465/168054969' }
   let(:delete_payload) { { delete: {} } }
-  let(:type_as_sym) { double }
-  let(:type) { double(to_sym: type_as_sym) }
-  let(:field_as_sym) { double }
-  let(:field) { double(to_sym: field_as_sym) }
-  let(:unique) { double }
+  let(:type_as_sym) { :skiplist }
+  let(:type) { 'skiplist' }
+  let(:field_as_sym) { :name }
+  let(:field) { 'name' }
+  let(:unique) { double('Boolean') }
   let(:raw_data) do
     {
       'code' => 201,
