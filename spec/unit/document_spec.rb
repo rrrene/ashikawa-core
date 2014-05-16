@@ -1,16 +1,17 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/document'
+require 'ashikawa-core/database'
 
 describe Ashikawa::Core::Document do
-  let(:database) { double }
-  let(:id) { 164 }
-  let(:path) { 'document/164' }
-  let(:key) { double }
-  let(:revision) { double }
-  let(:first_name) { double }
-  let(:last_name) { double }
-  let(:more_info) { double }
+  let(:database) { instance_double('Ashikawa::Core::Database') }
+  let(:id) { '23914039/25880119' }
+  let(:path) { 'document/23914039/25880119' }
+  let(:key) { '25880119' }
+  let(:revision) { '13728680' }
+  let(:first_name) { 'Jeff' }
+  let(:last_name) { 'Lebowski' }
+  let(:more_info) { 'This is valuable information' }
   let(:delete_payload) { { delete: {} } }
   let(:raw_data) do
     {
@@ -59,7 +60,7 @@ describe Ashikawa::Core::Document do
   describe 'initialized document with ID' do
     subject { Ashikawa::Core::Document.new(database, raw_data) }
 
-    let(:new_last_name) { double }
+    let(:new_last_name) { 'Dudemeister' }
     let(:raw_data_without_id_and_new_last_name) do
       {
         'first_name' => first_name,
