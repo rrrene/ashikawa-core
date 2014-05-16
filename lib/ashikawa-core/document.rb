@@ -56,8 +56,8 @@ module Ashikawa
       # @api semipublic
       # @example Check if the document is persisted
       #   document = Ashikawa::Core::Document.new(database, raw_document)
-      #   document.check_if_persisted!
-      def check_if_persisted!
+      #   document.check_if_persisted
+      def check_if_persisted
         raise DocumentNotFoundException if @id == :not_persisted
       end
 
@@ -81,7 +81,7 @@ module Ashikawa
       #   document = Ashikawa::Core::Document.new(database, raw_document)
       #   document.delete
       def delete
-        check_if_persisted!
+        check_if_persisted
         send_request_for_document(delete: {})
       end
 
@@ -118,7 +118,7 @@ module Ashikawa
       #   document['occupation'] = 'Not occupied'
       #   document.save
       def save
-        check_if_persisted!
+        check_if_persisted
         send_request_for_document(put: @content)
       end
 
