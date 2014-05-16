@@ -5,6 +5,7 @@ require 'ashikawa-core/connection'
 describe Ashikawa::Core::Connection do
   let(:request_stub) { Faraday::Adapter::Test::Stubs.new }
   let(:response_headers) { { 'content-type' => 'application/json; charset=utf-8' } }
+  let(:options) { instance_double('Hash') }
   subject { Ashikawa::Core::Connection.new(ARANGO_HOST, '_system', adapter: [:test, request_stub]) }
 
   its(:scheme) { should eq('http') }
@@ -58,7 +59,6 @@ describe Ashikawa::Core::Connection do
 
     its(:database_name) { should eq database_name }
 
-    let(:options) { double('Options') }
     it 'should be able to send a request without database suffix' do
       expect(subject).to receive(:send_request)
         .with("#{ARANGO_HOST}/_api/some_endpoint", options)
@@ -73,7 +73,6 @@ describe Ashikawa::Core::Connection do
     end
 
     its(:database_name) { should eq '_system' }
-    let(:options) { double('Options') }
     it 'should be able to send a request without database suffix' do
       expect(subject).to receive(:send_request)
         .with("#{ARANGO_HOST}/_api/some_endpoint", options)
@@ -221,27 +220,27 @@ describe Ashikawa::Core::Connection do
   describe 'initializing Faraday' do
     subject { Ashikawa::Core::Connection }
     let(:adapter) { double('Adapter') }
-    let(:logger) { double('Logger') }
-    let(:blocky) { double('Block') }
+    let(:logger) { instance_double('Logger') }
+    let(:faraday_block) { double('FaradayBlock') }
 
     it 'should initalize with specific logger and adapter' do
-      expect(Faraday).to receive(:new).with("#{ARANGO_HOST}/_db/_system/_api").and_yield(blocky)
-      expect(blocky).to receive(:request).with(:json)
-      expect(blocky).to receive(:response).with(:logger, logger)
-      expect(blocky).to receive(:response).with(:error_response)
-      expect(blocky).to receive(:response).with(:json)
-      expect(blocky).to receive(:adapter).with(adapter)
+      expect(Faraday).to receive(:new).with("#{ARANGO_HOST}/_db/_system/_api").and_yield(faraday_block)
+      expect(faraday_block).to receive(:request).with(:json)
+      expect(faraday_block).to receive(:response).with(:logger, logger)
+      expect(faraday_block).to receive(:response).with(:error_response)
+      expect(faraday_block).to receive(:response).with(:json)
+      expect(faraday_block).to receive(:adapter).with(adapter)
 
       subject.new(ARANGO_HOST, '_system', adapter: adapter, logger: logger)
     end
 
     it 'should initialize with defaults when no specific logger and adapter was given' do
-      expect(Faraday).to receive(:new).with("#{ARANGO_HOST}/_db/_system/_api").and_yield(blocky)
-      expect(blocky).to receive(:request).with(:json)
-      expect(blocky).to receive(:response).with(:logger, NullLogger.instance)
-      expect(blocky).to receive(:response).with(:error_response)
-      expect(blocky).to receive(:response).with(:json)
-      expect(blocky).to receive(:adapter).with(Faraday.default_adapter)
+      expect(Faraday).to receive(:new).with("#{ARANGO_HOST}/_db/_system/_api").and_yield(faraday_block)
+      expect(faraday_block).to receive(:request).with(:json)
+      expect(faraday_block).to receive(:response).with(:logger, NullLogger.instance)
+      expect(faraday_block).to receive(:response).with(:error_response)
+      expect(faraday_block).to receive(:response).with(:json)
+      expect(faraday_block).to receive(:adapter).with(Faraday.default_adapter)
 
       subject.new(ARANGO_HOST, '_system')
     end
