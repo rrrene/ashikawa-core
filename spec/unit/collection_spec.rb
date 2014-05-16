@@ -1,9 +1,10 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/collection'
+require 'ashikawa-core/database'
 
 describe Ashikawa::Core::Collection do
-  let(:database) { double }
+  let(:database) { instance_double('Ashikawa::Core::Database') }
   let(:raw_document_collection) do
     {
       'id' => '60768679',
@@ -25,11 +26,10 @@ describe Ashikawa::Core::Collection do
   describe 'an initialized collection' do
     subject { Ashikawa::Core::Collection.new(database, raw_document_collection) }
 
-    let(:raw_key_options) { double }
-    let(:key_options) { double }
-    let(:response) { double }
-    let(:value) { double }
-    let(:figure) { double }
+    let(:key_options) { instance_double('Ashikawa::Core::KeyOptions') }
+    let(:response) { instance_double('Hash') }
+    let(:value) { double('Value') }
+    let(:figure) { instance_double('Ashikawa::Core::Figure') }
 
     its(:name) { should eq('example_1') }
     its(:id) { should eq('60768679') }
@@ -164,7 +164,7 @@ describe Ashikawa::Core::Collection do
     end
 
     describe 'indexes' do
-      let(:index_response) { double }
+      let(:index_response) { instance_double('Hash') }
 
       it 'should add a new index' do
         expect(database).to receive(:send_request)
@@ -213,18 +213,9 @@ describe Ashikawa::Core::Collection do
       end
 
       it 'should get all indexes' do
-        multi_index_response = double
-        allow(multi_index_response).to receive(:map)
-          .and_yield(index_response)
-
-        cursor = double
-        allow(cursor).to receive(:[])
-          .with('indexes')
-          .and_return(multi_index_response)
-
         allow(database).to receive(:send_request)
           .with('index?collection=60768679')
-          .and_return(cursor)
+          .and_return('indexes' => [index_response])
 
         expect(Ashikawa::Core::Index).to receive(:new)
           .with(subject, index_response)
@@ -235,12 +226,12 @@ describe Ashikawa::Core::Collection do
   end
 
   describe 'an initialized document collection' do
-    subject { Ashikawa::Core::Collection.new database, raw_document_collection }
+    subject { Ashikawa::Core::Collection.new(database, raw_document_collection) }
 
-    let(:document) { double }
-    let(:response) { double }
-    let(:raw_document) { double }
-    let(:value) { double }
+    let(:document) { instance_double('Ashikawa::Core::Document') }
+    let(:response) { double('Response') }
+    let(:raw_document) { double('RawDocument') }
+    let(:value) { double('Value') }
 
     its(:content_type) { should be(:document) }
 
@@ -250,7 +241,6 @@ describe Ashikawa::Core::Collection do
       it 'should receive a document by ID via fetch' do
         expect(database).to receive(:send_request)
           .with('document/60768679/333', {})
-          .and_return(double)
         expect(Ashikawa::Core::Document).to receive(:new)
 
         subject.fetch(key)
@@ -259,7 +249,6 @@ describe Ashikawa::Core::Collection do
       it 'should receive a document by ID via []' do
         expect(database).to receive(:send_request)
           .with('document/60768679/333', {})
-          .and_return(double)
         expect(Ashikawa::Core::Document).to receive(:new)
 
         subject[key]
@@ -279,7 +268,6 @@ describe Ashikawa::Core::Collection do
       it 'should receive a document by ID via fetch' do
         expect(database).to receive(:send_request)
           .with('document/60768679/333', {})
-          .and_return(double)
         expect(Ashikawa::Core::Document).to receive(:new)
 
         subject.fetch(id)
@@ -288,7 +276,6 @@ describe Ashikawa::Core::Collection do
       it 'should receive a document by ID via []' do
         expect(database).to receive(:send_request)
           .with('document/60768679/333', {})
-          .and_return(double)
         expect(Ashikawa::Core::Document).to receive(:new)
 
         subject[id]
@@ -314,8 +301,10 @@ describe Ashikawa::Core::Collection do
     end
 
     it 'should not create a new edge' do
+      from = instance_double('Ashikawa::Core::Document')
+      to = instance_double('Ashikawa::Core::Document')
       expect do
-        subject.create_edge(double, double, { 'quote' => "D'ya have to use s'many cuss words?" })
+        subject.create_edge(from, to, { 'quote' => "D'ya have to use s'many cuss words?" })
       end.to raise_exception(RuntimeError, "Can't create an edge in a document collection")
     end
   end
@@ -323,16 +312,15 @@ describe Ashikawa::Core::Collection do
   describe 'an initialized edge collection' do
     subject { Ashikawa::Core::Collection.new database, raw_edge_collection }
 
-    let(:document) { double }
-    let(:response) { double }
-    let(:raw_document) { double }
+    let(:document) { instance_double('Ashikawa::Core::Document') }
+    let(:response) { double('Response') }
+    let(:raw_document) { double('RawDocument') }
 
     its(:content_type) { should be(:edge) }
 
     it 'should receive an edge by ID via fetch' do
       expect(database).to receive(:send_request)
         .with('edge/60768679/333', {})
-        .and_return(double)
       expect(Ashikawa::Core::Edge).to receive(:new)
 
       subject.fetch(333)
@@ -341,7 +329,6 @@ describe Ashikawa::Core::Collection do
     it 'should receive an edge by ID via []' do
       expect(database).to receive(:send_request)
         .with('edge/60768679/333', {})
-        .and_return(double)
       expect(Ashikawa::Core::Edge).to receive(:new)
 
       subject[333]
@@ -362,7 +349,9 @@ describe Ashikawa::Core::Collection do
         .with(database, response, raw_document)
         .and_return(document)
 
-      subject.create_edge(double(id: '1'), double(id: '2'), raw_document)
+      from = instance_double('Ashikawa::Core::Document', id: 1)
+      to = instance_double('Ashikawa::Core::Document', id: 2)
+      subject.create_edge(from, to, raw_document)
     end
 
     it 'should not create a new document' do
