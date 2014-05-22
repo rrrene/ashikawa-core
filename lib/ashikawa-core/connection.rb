@@ -6,6 +6,7 @@ require 'uri'
 require 'equalizer'
 require 'faraday_middleware'
 require 'ashikawa-core/error_response'
+require 'ashikawa-core/faraday/minimal_logger'
 
 module Ashikawa
   module Core
@@ -68,19 +69,22 @@ module Ashikawa
       # @param [String] database_name The name of the database you want to communicate with
       # @option options [Object] adapter The Faraday adapter you want to use. Defaults to Default Adapter
       # @option options [Object] logger The logger you want to use. Defaults to Null Logger.
+      # @option options [Object] debug_headers Should HTTP header be logged or not
       # @api public
       # @example Create a new Connection
       #  connection = Connection.new('http://localhost:8529', '_system')
       def initialize(api_string, database_name, options = {})
         @api_string = api_string
         @database_name = database_name
-        logger  = options.fetch(:logger) { NullLogger.instance }
-        adapter = options.fetch(:adapter) { Faraday.default_adapter }
+
+        logger        = options.fetch(:logger) { NullLogger.instance }
+        adapter       = options.fetch(:adapter) { Faraday.default_adapter }
+        debug_headers = options.fetch(:debug_headers) { false }
 
         @connection = Faraday.new("#{api_string}/_db/#{database_name}/_api") do |connection|
           connection.request :json
 
-          connection.response :logger, logger
+          connection.response :minimal_logger, logger, debug_headers
           connection.response :error_response
           connection.response :json
 
