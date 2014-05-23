@@ -5,21 +5,12 @@ require 'ashikawa-core/database'
 describe Ashikawa::Core::Database do
   subject { Ashikawa::Core::Database }
 
-  let(:url) { double }
-  let(:host) { double }
-  let(:port) { double }
-  let(:scheme) { double }
-  let(:connection) { double('connection', host: host, port: port, scheme: scheme) }
-  let(:js_function) { double }
-  let(:collections) { double }
-  let(:transaction) { double }
-  let(:logger) { double }
-  let(:adapter) { double }
-  let(:configuration) { double }
-  let(:raw_collection) { double }
-  let(:collection) { double }
+  let(:connection) { instance_double('Ashikawa::Core::Connection', host: 'localhost', port: 8529, scheme: 'https') }
+  let(:collection) { instance_double('Ashikawa::Core::Collection') }
+  let(:raw_collection) { double('RawCollection') }
 
   it 'should initialize with a configuration object' do
+    configuration = instance_double('Ashikawa::Core::Configuration')
     expect(Ashikawa::Core::Configuration).to receive(:new)
       .and_return(configuration)
     expect(configuration).to receive(:connection)
@@ -41,9 +32,8 @@ describe Ashikawa::Core::Database do
       subject.query
     end
 
-    let(:database_list) { double('DatabaseList') }
-
     it 'should list all databases' do
+      database_list = %w(_system cupcakes ponies)
       expect(connection).to receive(:send_request)
         .with('database')
         .and_return({ 'result' => database_list, 'error' => false, 'code' => 200 })
@@ -108,7 +98,6 @@ describe Ashikawa::Core::Database do
     end
 
     it 'should truncate all documents in all collections' do
-      collection = double('Collection')
       allow(subject).to receive(:collections)
         .and_return([collection])
       expect(collection).to receive(:truncate)
@@ -210,6 +199,9 @@ describe Ashikawa::Core::Database do
     end
 
     it 'should create a transaction' do
+      js_function = 'function () { return 5; }'
+      collections = { read: ['collection_1'] }
+      transaction = instance_double('Ashikawa::Core::Transaction')
       expect(Ashikawa::Core::Transaction).to receive(:new)
         .with(subject, js_function, collections)
         .and_return(transaction)
