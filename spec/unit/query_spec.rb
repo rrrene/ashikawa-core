@@ -1,27 +1,20 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/query'
+require 'ashikawa-core/database'
 
 describe Ashikawa::Core::Query do
-  let(:collection) { double }
-  let(:database) { double }
+  let(:collection_name) { 'my_collection' }
+  let(:database) { instance_double('Ashikawa::Core::Database') }
+  let(:collection) { instance_double('Ashikawa::Core::Collection', name: collection_name, database: database) }
 
-  describe 'initialized with collection' do
+  context 'initialized with collection' do
     subject { Ashikawa::Core::Query.new(collection) }
-    let(:name) { double }
-
-    before do
-      allow(collection).to receive(:name).and_return(name)
-      allow(collection).to receive(:database).and_return(double)
-    end
 
     describe 'get all' do
-      let(:limit) { double }
-      let(:skip) { double }
-
       it 'should list all documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/all', put: { 'collection' => name })
+          .with('simple/all', put: { 'collection' => collection_name })
           .and_return(server_response('simple-queries/all'))
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
@@ -30,33 +23,35 @@ describe Ashikawa::Core::Query do
 
       it 'should be able to limit the number of documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/all', put: { 'collection' => name, 'limit' => limit })
+          .with('simple/all', put: { 'collection' => collection_name, 'limit' => 20 })
           .and_return(server_response('simple-queries/all_skip'))
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
-        subject.all(limit: limit)
+        subject.all(limit: 20)
       end
 
       it 'should be able to skip documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/all', put: { 'collection' => name, 'skip' => skip })
+          .with('simple/all', put: { 'collection' => collection_name, 'skip' => 5 })
           .and_return(server_response('simple-queries/all_limit'))
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
-        subject.all(skip: skip)
+        subject.all(skip: 5)
       end
     end
 
     describe 'first by example' do
-      let(:example_document) { double }
+      let(:example_document) { double('ExampleDocument') }
       let(:response) { server_response('simple-queries/example') }
 
       it 'should find exactly one fitting document' do
         allow(collection).to receive(:database)
-          .and_return(double)
+          .and_return(database)
         expect(collection).to receive(:send_request)
-          .with('simple/first-example', put: { 'collection' => name, 'example' => example_document })
-          .and_return(response)
+          .with('simple/first-example', put: {
+            'collection' => collection_name,
+            'example' => example_document
+          }).and_return(response)
         expect(Ashikawa::Core::Document).to receive(:new)
 
         subject.first_example(example_document)
@@ -66,13 +61,13 @@ describe Ashikawa::Core::Query do
     describe 'all by example' do
       let(:example_document) { { hello: 'world' } }
       let(:response) { server_response('simple-queries/example') }
-      let(:limit) { double }
-      let(:skip) { double }
 
       it 'should find all fitting documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/by-example', put: { 'collection' => name, 'example' => example_document })
-          .and_return(response)
+          .with('simple/by-example', put: {
+            'collection' => collection_name,
+            'example' => example_document
+          }).and_return(response)
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
         subject.by_example(example_document)
@@ -80,29 +75,35 @@ describe Ashikawa::Core::Query do
 
       it 'should be able to limit the number of documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/by-example', put: { 'collection' => name, 'limit' => limit, 'example' => example_document })
-          .and_return(response)
+          .with('simple/by-example', put: {
+            'collection' => collection_name,
+            'limit' => 10,
+            'example' => example_document
+          }).and_return(response)
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
-        subject.by_example(example_document, limit: limit)
+        subject.by_example(example_document, limit: 10)
       end
 
       it 'should be able to skip documents' do
         expect(collection).to receive(:send_request)
-          .with('simple/by-example', put: { 'collection' => name, 'skip' => skip, 'example' => example_document })
-          .and_return(response)
+          .with('simple/by-example', put: {
+            'collection' => collection_name,
+            'skip' => 2,
+            'example' => example_document
+          }).and_return(response)
         expect(Ashikawa::Core::Cursor).to receive(:new)
 
-        subject.by_example(example_document, skip: skip)
+        subject.by_example(example_document, skip: 2)
       end
     end
 
     describe 'near a geolocation' do
-      let(:latitude) { double }
-      let(:longitude) { double }
+      let(:latitude) { 37.332095 }
+      let(:longitude) { -122.030757 }
       let(:arguments) do
         {
-          'collection' => name,
+          'collection' => collection_name,
           'latitude' => latitude,
           'longitude' => longitude
         }
@@ -120,12 +121,12 @@ describe Ashikawa::Core::Query do
     end
 
     describe 'within a radius of a geolocation' do
-      let(:latitude) { double }
-      let(:longitude) { double }
-      let(:radius) { double }
+      let(:latitude) { 37.332095 }
+      let(:longitude) { -122.030757 }
+      let(:radius) { 50 }
       let(:arguments) do
         {
-          'collection' => name,
+          'collection' => collection_name,
           'latitude' => latitude,
           'longitude' => longitude,
           'radius' => radius
@@ -144,13 +145,12 @@ describe Ashikawa::Core::Query do
     end
 
     describe 'in a certain range' do
-      let(:attribute) { double }
-      let(:left) { double }
-      let(:right) { double }
-      let(:closed) { double }
+      let(:attribute) { 'age' }
+      let(:left) { 45 }
+      let(:right) { 50 }
+      let(:closed) { true }
       let(:arguments) do
-        {
-          'collection' => name,
+        { 'collection' => collection_name,
           'attribute' => attribute,
           'left' => left,
           'right' => right,
@@ -170,9 +170,9 @@ describe Ashikawa::Core::Query do
     end
 
     describe 'with an AQL query' do
-      let(:query) { double }
-      let(:count) { double }
-      let(:batch_size) { double }
+      let(:query) { 'FOR human IN humans RETURN human' }
+      let(:count) { 5 }
+      let(:batch_size) { 200 }
       let(:arguments) do
         {
           'query' => query,
@@ -184,7 +184,7 @@ describe Ashikawa::Core::Query do
 
       it 'should be able to execute it' do
         allow(collection).to receive(:database)
-          .and_return(double)
+          .and_return(database)
         expect(collection).to receive(:send_request)
           .with('cursor', post: arguments)
           .and_return(response)
@@ -196,7 +196,7 @@ describe Ashikawa::Core::Query do
 
       it 'passes bound variables to the server' do
         allow(collection).to receive(:database)
-          .and_return(double)
+          .and_return(database)
         expect(collection).to receive(:send_request)
           .with('cursor', post: { 'bindVars' => { 'foo' => 'bar' }, 'query' => query })
           .and_return(response)
@@ -223,7 +223,7 @@ describe Ashikawa::Core::Query do
     end
   end
 
-  describe 'initialized with database' do
+  context 'initialized with database' do
     subject { Ashikawa::Core::Query.new(database) }
 
     it 'should throw an exception when a simple query is executed' do
@@ -233,9 +233,9 @@ describe Ashikawa::Core::Query do
     end
 
     describe 'with an AQL query' do
-      let(:query) { double }
-      let(:count) { double }
-      let(:batch_size) { double }
+      let(:query) { 'FOR pony IN ponies RETURN pony' }
+      let(:count) { 5 }
+      let(:batch_size) { 2 }
       let(:arguments) do
         {
           'query' => query,
