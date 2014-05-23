@@ -15,7 +15,7 @@ describe Ashikawa::Core::NoCollectionProvidedException do
 end
 
 describe Ashikawa::Core::ClientError do
-  let(:error_message) { double }
+  let(:error_message) { 'The client did not do what it should do' }
   subject { Ashikawa::Core::ClientError.new(error_message) }
   its(:to_s) { should be(error_message) }
 end
@@ -49,7 +49,7 @@ describe Ashikawa::Core::IndexNotFoundException do
 end
 
 describe Ashikawa::Core::ServerError do
-  let(:error_message) { double }
+  let(:error_message) { 'The server is misbehaving' }
   subject { Ashikawa::Core::ServerError.new(error_message) }
   its(:to_s) { should be(error_message) }
 end
