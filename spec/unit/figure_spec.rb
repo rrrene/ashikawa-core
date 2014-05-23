@@ -2,17 +2,17 @@
 require 'ashikawa-core/figure'
 
 describe Ashikawa::Core::Figure do
-  let(:alive_size) { double }
-  let(:alive_count) { double }
-  let(:dead_size) { double }
-  let(:dead_count) { double }
-  let(:dead_deletion) { double }
-  let(:datafiles_count) { double }
-  let(:datafiles_file_size) { double }
-  let(:journals_count) { double }
-  let(:journals_file_size) { double }
-  let(:shapes_count) { double }
-  let(:attributes_count) { double }
+  let(:alive_size) { 0 }
+  let(:alive_count) { 0 }
+  let(:dead_size) { 2384 }
+  let(:dead_count) { 149 }
+  let(:dead_deletion) { 0 }
+  let(:datafiles_count) { 1 }
+  let(:datafiles_file_size) { 0 }
+  let(:journals_count) { 1 }
+  let(:journals_file_size) { 33_554_432 }
+  let(:shapes_count) { 6 }
+  let(:attributes_count) { 0 }
 
   let(:raw_figures) do
     {
