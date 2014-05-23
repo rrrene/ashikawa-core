@@ -1,10 +1,11 @@
 # -*- encoding : utf-8 -*-
 require 'unit/spec_helper'
 require 'ashikawa-core/transaction'
+require 'ashikawa-core/database'
 
 describe Ashikawa::Core::Transaction do
-  let(:db) { double }
-  let(:action) { double }
+  let(:db) { instance_double('Ashikawa::Core::Database') }
+  let(:action) { 'function () { return 5; }' }
 
   describe 'creating a transaction' do
     subject { Ashikawa::Core::Transaction }
@@ -55,11 +56,8 @@ describe Ashikawa::Core::Transaction do
     end
 
     describe 'execute' do
-      let(:response) { double }
-      let(:result) { double }
-      let(:wait_for_sync) { double }
-      let(:lock_timeout) { double }
-      let(:action_params) { double }
+      let(:response) { double('Response') }
+      let(:result) { double('Result') }
 
       before do
         allow(response).to receive(:[])
@@ -114,10 +112,10 @@ describe Ashikawa::Core::Transaction do
         subject.execute
       end
 
-      it 'should send with wait for sync set to the value provided by the user' do
+      it 'should allow to set wait for sync to true' do
         expect(db).to receive(:send_request)
-          .with(anything, { post: hash_including(waitForSync: wait_for_sync) })
-        subject.wait_for_sync = wait_for_sync
+          .with(anything, { post: hash_including(waitForSync: true) })
+        subject.wait_for_sync = true
         subject.execute
       end
 
@@ -129,15 +127,15 @@ describe Ashikawa::Core::Transaction do
 
       it 'should send the configured lock timeout' do
         expect(db).to receive(:send_request)
-          .with(anything, { post: hash_including(lockTimeout: lock_timeout) })
-        subject.lock_timeout = lock_timeout
+          .with(anything, { post: hash_including(lockTimeout: 30) })
+        subject.lock_timeout = 30
         subject.execute
       end
 
       it 'should send the arguments object if it was provided' do
         expect(db).to receive(:send_request)
-          .with(anything, { post: hash_including(params: action_params) })
-        subject.execute(action_params)
+          .with(anything, { post: hash_including(params: { a: 5 }) })
+        subject.execute(a: 5)
       end
 
       it 'should not send params by default' do
