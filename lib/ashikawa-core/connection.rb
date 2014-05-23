@@ -76,16 +76,7 @@ module Ashikawa
         @database_name = database_name
         logger  = options.fetch(:logger) { NullLogger.instance }
         adapter = options.fetch(:adapter) { Faraday.default_adapter }
-
-        @connection = Faraday.new("#{api_string}/_db/#{database_name}/_api") do |connection|
-          connection.request :json
-
-          connection.response :logger, logger
-          connection.response :error_response
-          connection.response :json
-
-          connection.adapter(*adapter)
-        end
+        @connection = create_connection("#{api_string}/_db/#{database_name}/_api", logger, adapter)
       end
 
       # Sends a request to a given path returning the parsed result
@@ -146,6 +137,23 @@ module Ashikawa
       end
 
       private
+
+      # Create the Faraday connection
+      #
+      # @param [String] url
+      # @param [Logger] logger
+      # @param [Faraday::Adapter] adapter
+      # @return [Faraday] Initialized Faraday
+      # @api private
+      def create_connection(url, logger, adapter)
+        Faraday.new(url) do |connection|
+          connection.request(:json)
+          connection.response(:logger, logger)
+          connection.response(:error_response)
+          connection.response(:json)
+          connection.adapter(*adapter)
+        end
+      end
 
       # Return the HTTP Verb for the given parameters
       #
